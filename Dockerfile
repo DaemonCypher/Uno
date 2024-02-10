@@ -8,4 +8,4 @@ WORKDIR /usr/src/app
 COPY . .
 
 # Run the script when the container launches
-CMD ["python", "./uno_game.py"]
+CMD ["python", "./UNO.py"]
