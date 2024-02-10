@@ -1,122 +1,101 @@
-from ast import While
 import random
 import sys
-COLOR = ["red", "green", "blue", "yellow"]
+
+COLOR = ["Red", "Green", "Blue", "Yellow"]
 
 class Card(object):
     def __init__(self, suit, val):
         self.suit = suit
         self.value = val
 
-    # Implementing build in methods so that you can print a card object
-    def __unicode__(self):
-        return self.show()
-    def __str__(self):
-        return self.show()
-    def __repr__(self):
-        return self.show()
-        
     def show(self):
-        val = self.value
-        return "{} of {}".format(val, self.suit)
+        return "{} of {}".format(self.value, self.suit)
 
 class Deck(object):
     def __init__(self):
         self.cards = []
         self.build()
 
-    # Display all cards in the deck
-    def show(self):
-        for card in self.cards:
-            print (card.show())
-
-    # Generate cards
     def build(self):
-        self.cards = []
         for c in COLOR:
-            for val in range(1,11):
+            for val in range(1, 11):  # Using numbers 1-10 for simplicity
                 self.cards.append(Card(c, val))
+        self.shuffle()
 
-    # Shuffle the deck
-    def shuffle(self, num=1):
-        length = len(self.cards)
-        for _ in range(num):
-            # This is the fisher yates shuffle algorithm
-            for i in range(length-1, 0, -1):
-                randi = random.randint(0, i)
-                if i == randi:
-                    continue
-                self.cards[i], self.cards[randi] = self.cards[randi], self.cards[i]
-            # You can also use the build in shuffle method
-            # random.shuffle(self.cards)
+    def shuffle(self):
+        random.shuffle(self.cards)
 
-    # Return the top card
     def deal(self):
-        return self.cards.pop()
+        if len(self.cards) > 0:
+            return self.cards.pop()
+        else:
+            return None
 
 class Player(object):
     def __init__(self, name):
         self.name = name
         self.hand = []
 
-    def sayHello(self):
-        print ("Welcome! {}".format(self.name))
-        return self
-
-    # Draw n number of cards from a deck
-    # Returns true in n cards are drawn, false if less then that
     def draw(self, deck, num=1):
         for _ in range(num):
             card = deck.deal()
             if card:
                 self.hand.append(card)
-            else: 
+            else:
                 return False
         return True
 
-    # Display all the cards in the players hand
     def showHand(self):
-        print ("{}'s hand: {}".format(self.name, self.hand))
-        return self
+        for card in self.hand:
+            print(card.show())
 
-    def discard(self,where):
-        if len (self.hand) < where:
-            print ("hand is empty")
-        else: 
-            return self.hand.pop(where)
+    def playCard(self, cardIndex):
+        if cardIndex >= 0 and cardIndex < len(self.hand):
+            return self.hand.pop(cardIndex)
+        else:
+            return None
+
+def main():
+    print("Welcome to the Uno-like Game!")
+
+    deck = Deck()
+    player1 = Player(input("Enter Player 1's name: "))
+    player2 = Player("Game Master")  # Automated opponent
+
+    # Initial draw
+    player1.draw(deck, 7)
+    player2.draw(deck, 7)
+
+    currentPlayer = player1
+    otherPlayer = player2
+
+    while True:
+        print(f"\n{currentPlayer.name}'s turn.")
+        currentPlayer.showHand()
+
+        cardPlayed = False
+        while not cardPlayed:
+            playerInput = input("Choose a card to play (1-{}), or 'draw' to draw a card: ".format(len(currentPlayer.hand)))
+            if playerInput.lower() == 'draw':
+                currentPlayer.draw(deck, 1)
+                currentPlayer.showHand()
+            else:
+                try:
+                    cardIndex = int(playerInput) - 1  # Adjust for 0-index
+                    if 0 <= cardIndex < len(currentPlayer.hand):
+                        card = currentPlayer.playCard(cardIndex)
+                        print(f"{currentPlayer.name} played {card.show()}")
+                        cardPlayed = True
+                except ValueError:
+                    print("Invalid input, please try again.")
+
+        # Check win condition
+        if len(currentPlayer.hand) == 0:
+            print(f"\n{currentPlayer.name} wins!")
+            break
+
+        # Switch players
+        currentPlayer, otherPlayer = otherPlayer, currentPlayer
 
 if __name__ == "__main__":
-    # Test making a Card
-    # card = Card('Spades', 6)
-    # print card
-
-    # Test making a Deck
-    while True:
-        print("Would you like to play a game of Uno with the Game Master?")
-        play = input("(Y)es or (N)o pussy: ")
-        if play == "Y" or play == "yes" or play == "Yes"or play == "y":
-            print("choice was yes")
-            GameDeck = Deck()
-            GameDeck.shuffle()
-            #GameDeck.show()
-            name = input("Enter your name: ")
-            player1 = Player(name)
-            player1.sayHello()
-            player1.draw(GameDeck, 7)
-            player1.showHand()
-            player1.discard(2)
-            player1.showHand()
-
-
-            gM = Player("GM")
-            gM.draw(GameDeck,7)
-
-            board = Player("board")
-            board.draw(GameDeck,1)
-            board.showHand()
-
-
-        else:
-            print("What a Pussy!")
-            sys.exit()
-    
+    main()
